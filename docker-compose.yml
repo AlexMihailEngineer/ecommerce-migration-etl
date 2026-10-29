@@ -1,0 +1,100 @@
+services:
+  # ---------------------------------------------------------------------------
+  # Shared Database Engine
+  # ---------------------------------------------------------------------------
+  db:
+    image: mariadb:10.11
+    container_name: ecom_db
+    restart: unless-stopped
+    ports:
+      - "3308:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root_pass
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro,z
+
+  # ---------------------------------------------------------------------------
+  # Database Management GUI (phpMyAdmin)
+  # http://localhost:8080
+  # ---------------------------------------------------------------------------
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: ecom_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: root_pass
+    depends_on:
+      - db
+
+  # ---------------------------------------------------------------------------
+  # WooCommerce (WordPress)
+  # http://localhost:8081
+  # ---------------------------------------------------------------------------
+  woocommerce:
+    image: wordpress:latest
+    container_name: ecom_woocommerce
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: woocommerce
+      WORDPRESS_DB_USER: root
+      WORDPRESS_DB_PASSWORD: root_pass
+    volumes:
+      - wp_data:/var/www/html
+    depends_on:
+      - db
+
+  # ---------------------------------------------------------------------------
+  # PrestaShop
+  # http://localhost:8082
+  # ---------------------------------------------------------------------------
+  prestashop:
+    image: prestashop/prestashop:8.1-apache
+    container_name: ecom_prestashop
+    restart: unless-stopped
+    ports:
+      - "8082:80"
+    environment:
+      PS_DEV_MODE: "1"
+      PS_INSTALL_AUTO: "1"
+      DB_SERVER: db
+      DB_NAME: prestashop
+      DB_USER: root
+      DB_PASSWD: root_pass
+      PS_DOMAIN: localhost:8082
+    volumes:
+      - ps_data:/var/www/html
+    depends_on:
+      - db
+
+  # ---------------------------------------------------------------------------
+  # OpenCart (Official Core Source via Apache + PHP)
+  # http://localhost:8083
+  # ---------------------------------------------------------------------------
+  opencart:
+    build:
+      context: .
+      dockerfile: Dockerfile.opencart
+    container_name: ecom_opencart
+    restart: unless-stopped
+    ports:
+      - "8083:80"
+    volumes:
+      - ./opencart_src:/var/www/html:z
+    depends_on:
+      - db	
+
+# -----------------------------------------------------------------------------
+# Persistent Volumes
+# -----------------------------------------------------------------------------
+volumes:
+  db_data:
+  wp_data:
+  ps_data:

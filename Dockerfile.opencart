@@ -1,0 +1,18 @@
+FROM php:7.4-apache
+
+# Fix Debian Bullseye security mirror 404s for deprecated PHP 7.4 base image
+RUN sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list && \
+    sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list && \
+    sed -i '/bullseye-updates/d' /etc/apt/sources.list
+
+RUN apt-get update -o Acquire::Check-Valid-Until=false && apt-get install -y --no-install-recommends \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libzip-dev \
+    unzip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install mysqli pdo pdo_mysql gd zip \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN a2enmod rewrite

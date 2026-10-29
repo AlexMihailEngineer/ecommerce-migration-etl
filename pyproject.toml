@@ -1,0 +1,18 @@
+[project]
+name = "e-commerce"
+version = "0.1.0"
+description = "ETL and data audit pipeline for e-commerce migrations"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "duckdb",
+    "httpx",
+    "mysql-connector-python",
+    "polars",
+    "pyarrow",
+    "python-dotenv",
+    "requests",
+]
+
+[tool.uv]
+package = false
